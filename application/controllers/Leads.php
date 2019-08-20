@@ -17,6 +17,8 @@ class Leads extends CI_Controller {
 		$this -> load -> database();
 		$this -> load -> library('session');
 		$this -> session -> set_userdata('view_type', 'leads');
+		
+		
 		$this -> load -> library('grocery_CRUD');
 
 		/*cache control*/
@@ -127,7 +129,10 @@ class Leads extends CI_Controller {
 		//Unset delete and Edit
 		$crud -> unset_delete();
 		$crud->unset_add();
-		$crud->unset_edit();
+		//On some admin roll to be able to edit and reopen the closed assessment
+		if($this->session->userdata('role_id') != 1){
+			$crud->unset_edit();
+		}
 		
 		$output = $crud -> render();
 		$page_data['page_name'] = 'leads_information';

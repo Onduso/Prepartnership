@@ -7,8 +7,7 @@ class Crud_model extends CI_Model {
 
 	function __construct() {
 		parent::__construct();
-		
-	
+
 	}
 
 	function clear_cache() {
@@ -76,27 +75,6 @@ class Crud_model extends CI_Model {
 			$is_admin = true;
 
 		return $is_admin;
-	}
-
-	function get_connect_mappings() {
-		//Get the coonect mapping from the table 'compassion_connect_mapping'
-		$connect_mappings = $this -> db -> select(array('compassion_connect_mapping_id', 'lead_score_parameter', 'lead_score_stage')) -> get('compassion_connect_mapping') -> result_object();
-
-		//Build the array to be used in the controller 'Settings' in the method add_assemessment
-		//$count = 1;
-		//$build_dropdown_array[] = array('option' => 'No Connect Match');
-
-		foreach ($connect_mappings as $connect_value) {
-
-			$str_lead_score_stage = 'Lead Score Criteria -' . ' ' . $connect_value -> lead_score_stage . ' : ';
-
-			$str_lead_score_stage = $connect_value -> compassion_connect_mapping_id == 1 ? '' : $str_lead_score_stage;
-
-			$build_dropdown_array[$connect_value -> compassion_connect_mapping_id]['option'] = $str_lead_score_stage . $connect_value -> lead_score_parameter;
-			//$count++;
-		}
-
-		return $build_dropdown_array;
 	}
 
 	/**
@@ -779,23 +757,42 @@ class Crud_model extends CI_Model {
 
 		return $type_array;
 	}
-	
-	public function get_fields_to_display()
-      {
-            $field_to_display=$this->db->get_where('lead_bio_fields',array('show_field'=>1))->result_array();
-            
-            $field_name_array=array_column($field_to_display, 'lead_bio_info_column');
-            
-            return $field_name_array;
-      }
-	
-	
-public function get_lead_bio_info_as_a_row($lead_id){
-            
-            //Get the lead bio data as a row
-            return $this -> db -> get_where('leads_bio_information', array('leads_bio_information_id' => $lead_id)) -> row();
-      }
+
+	public function get_fields_to_display() {
+		$field_to_display = $this -> db -> get_where('lead_bio_fields', array('show_field' => 1)) -> result_array();
+
+		$field_name_array = array_column($field_to_display, 'lead_bio_info_column');
+
+		return $field_name_array;
+	}
+
+	public function get_lead_bio_info_as_a_row($lead_id) {
+
+		//Get the lead bio data as a row
+		return $this -> db -> get_where('leads_bio_information', array('leads_bio_information_id' => $lead_id)) -> row();
+	}
 
 	
+
+	function get_connect_mappings() {
+		//Get the coonect mapping from the table 'compassion_connect_mapping'
+		$connect_mappings = $this -> db -> select(array('compassion_connect_mapping_id', 'lead_score_parameter', 'lead_score_stage')) -> get('compassion_connect_mapping') -> result_object();
+
+		//Build the array to be used in the controller 'Settings' in the method add_assemessment
+		//$count = 1;
+		//$build_dropdown_array[] = array('option' => 'No Connect Match');
+
+		foreach ($connect_mappings as $connect_value) {
+
+			$str_lead_score_stage = 'Lead Score Criteria -' . ' ' . $connect_value -> lead_score_stage . ' : ';
+
+			$str_lead_score_stage = $connect_value -> compassion_connect_mapping_id == 1 ? '' : $str_lead_score_stage;
+
+			$build_dropdown_array[$connect_value -> compassion_connect_mapping_id]['option'] = $str_lead_score_stage . $connect_value -> lead_score_parameter;
+			//$count++;
+		}
+
+		return $build_dropdown_array;
+	}
 
 }
