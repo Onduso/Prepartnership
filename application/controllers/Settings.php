@@ -318,6 +318,9 @@ class Settings extends CI_Controller {
 
 		//Set relationship to CC mapping
 		$crud -> set_relation('compassion_connect_mapping', 'compassion_connect_mapping', 'lead_score_parameter');
+		
+		//Callback function added by Onduso
+		$crud -> callback_read_field('status', array($this, 'modify_status_on_view_form'));
 
 		//Prevented actions
 		$crud -> unset_delete();
