@@ -37,17 +37,15 @@ class Settings extends CI_Controller {
 		$crud -> set_table('lead_bio_fields');
 
 		//Unset Actions
+		$crud -> unset_delete();
 		$crud -> unset_clone();
-		$crud->unset_delete();
 
 		//Unset columns
 		$crud -> unset_columns(array('lead_bio_info_column'));
 		$crud -> unset_fields(array('lead_bio_info_column'));
 
 		//Display as in human readable fields
-		$crud -> display_as('datatype_id', get_phrase('datatype')) 
-		-> display_as('lead_bio_fields_name', get_phrase('field_name'))
-		-> display_as('is_field_null',get_phrase('is_field_required?'));
+		$crud -> display_as('datatype_id', get_phrase('datatype')) -> display_as('lead_bio_fields_name', get_phrase('field_name')) -> display_as('is_field_null', get_phrase('is_field_required?'));
 
 		//Set relationship
 		$crud -> set_relation('datatype_id', 'datatype', 'datatype_name');
@@ -57,10 +55,10 @@ class Settings extends CI_Controller {
 		$crud -> field_type('show_field', 'dropdown', array(get_phrase('no'), get_phrase('yes')));
 		$crud -> field_type('is_field_null', 'dropdown', array(get_phrase('no'), get_phrase('yes')));
 		$crud -> field_type('is_suspended', 'dropdown', array(get_phrase('no'), get_phrase('yes')));
-		
+
 		//Set Mandatory Fields
-		$crud->required_fields(array('datatype_id'));
-		
+		$crud -> required_fields(array('datatype_id'));
+
 		//Hide fields on Edit
 		//$crud->unset_edit_fields(array('lead_bio_fields_name'));
 
@@ -70,8 +68,16 @@ class Settings extends CI_Controller {
 		// Set delete when a developer logs in
 		$crud -> callback_before_delete(array($this, 'delete_leads_bio_information_field'));
 		$crud -> callback_after_update(array($this, 'modify_column_name'));
-		$crud->callback_edit_field('lead_bio_fields_name',array($this,'readonly_field_on_edit_form'));
-		
+		$crud -> callback_edit_field('lead_bio_fields_name', array($this, 'readonly_field_on_edit_form'));
+
+		//Added by Onduso
+		$crud -> callback_read_field('show_field', array($this, 'modify_value_to_view'));
+		$crud -> callback_read_field('is_field_null', array($this, 'modify_value_to_view'));
+		$crud -> callback_read_field('is_suspended', array($this, 'modify_value_to_view'));
+		$crud -> callback_read_field('is_field_unique', array($this, 'modify_value_to_view'));
+		$crud -> callback_read_field('is_field_unique', array($this, 'modify_value_to_view'));
+		$crud -> callback_read_field('default_value', array($this, 'modify_value_to_view'));
+
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
 		$page_data['view_type'] = 'settings';
@@ -81,21 +87,31 @@ class Settings extends CI_Controller {
 		$this -> load -> view('backend/index', $output);
 	}
 
-	function readonly_field_on_edit_form ($value, $primary_key) {
-            //return '<input class="form-control" readonly="readonly" type="text" value="'.$value.'" style="width:462px">';
-			return '<div>'.$value.'</div>';
+	//Onduso added this method
+	public function modify_value_to_view($value, $primary_key) {
+		//Display Yes or No when viewing and not one
+		$value == 1 ? $modfy_html = '<div>Yes</div>' : $modfy_html = '<div>No</div>';
+
+		//If value is not 0 or 1 or any text
+		if ($value == '') {$modfy_html = '';
+		}
+
+		return $modfy_html;
 	}
-	
+
+	function readonly_field_on_edit_form($value, $primary_key) {
+		//return '<input class="form-control" readonly="readonly" type="text" value="'.$value.'" style="width:462px">';
+		return '<div>' . $value . '</div>';
+	}
+
 	function modify_column_name($post_array, $primary_key) {
 		$this -> load -> dbforge();
 
 		//Get the lead_bio_fields updated record
-		$update_record = $this -> db -> get_where('lead_bio_fields', 
-		array('lead_bio_fields_id' => $primary_key)) -> row();
+		$update_record = $this -> db -> get_where('lead_bio_fields', array('lead_bio_fields_id' => $primary_key)) -> row();
 
 		//Get the datatype record of the update lead_bio_fields updated record
-		$datatype = $this -> db -> get_where('datatype', 
-		array('datatype_id' => $update_record -> datatype_id)) -> row();
+		$datatype = $this -> db -> get_where('datatype', array('datatype_id' => $update_record -> datatype_id)) -> row();
 
 		//Get old column name of the lead_bio_information from the lead_bio_fields lead_bio_info_column value
 		$old_colum_name = $update_record -> lead_bio_info_column;
@@ -188,37 +204,41 @@ class Settings extends CI_Controller {
 		$crud = new grocery_CRUD();
 		$crud -> set_theme('tablestrap');
 		$crud -> set_table('assessment_milestones');
-		
+		//Unset actions
+		$crud -> unset_clone();
+		$crud -> unset_delete();
+
 		//Dropdown fields conversion
-		$crud->field_type('status', 'dropdown',array(get_phrase('suspended'),get_phrase('active')));
-		
+		$crud -> field_type('status', 'dropdown', array(get_phrase('suspended'), get_phrase('active')));
+
 		//Unset Field Add /Edit
-		$crud->unset_fields(array('assessment_review_status'));
-		
+		$crud -> unset_edit_fields(array('assessment_review_status'));
+		$crud -> unset_add_fields(array('assessment_review_status'));
+
 		//Avoid selection of "New Lead" Milestone
-		$crud->where(array('milestone_name<>'=>'New Lead'));
-		
+		$crud -> where(array('milestone_name<>' => 'New Lead'));
+
 		//Order By - Not working
-		$crud->order_by('assessment_milestones_id');
-		
+		$crud -> order_by('assessment_milestones_id');
+
 		//Relation tables
-		$crud->set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name');
-		
+		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name');
+
 		//Display in human readable
-		$crud->display_as('milestones_insert_after_id',get_phrase('insert_after'))
-		->display_as('user_customized_review_status',get_phrase('customized_review_status'));
-		
+		$crud -> display_as('milestones_insert_after_id', get_phrase('insert_after')) -> display_as('user_customized_review_status', get_phrase('customized_review_status'));
+
 		//Set required fields
-		$crud->required_fields(array('milestone_name','milestones_insert_after_id','assessment_period_in_days'));
-		
+		$crud -> required_fields(array('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days'));
+
 		//Callbacks
-		$crud->callback_after_insert(array($this,'update_insert_after_milestone'));
-		$crud->callback_field('assessment_period_in_days',array($this,'create_a_range_assessment_period_in_days_field'));
-		$crud->callback_after_insert(array($this,'update_assessment_review_status'));
-		
+		$crud -> callback_after_insert(array($this, 'update_insert_after_milestone'));
+		$crud -> callback_field('assessment_period_in_days', array($this, 'create_a_range_assessment_period_in_days_field'));
+		$crud -> callback_after_insert(array($this, 'update_assessment_review_status'));
+		$crud -> callback_read_field('status', array($this, 'modify_status_on_view_form'));
+
 		//Callbacks to be run by developers
 		// $crud->callback_after_update();
-		
+
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
 		$page_data['view_type'] = 'settings';
@@ -228,26 +248,33 @@ class Settings extends CI_Controller {
 		$this -> load -> view('backend/index', $output);
 	}
 
-	
-	function update_assessment_review_status($post_array,$primary_key){
-		
-		$data['assessment_review_status'] = $post_array['milestone_name'].' In Progress';
-		
-		$this->db->where(array('assessment_milestones_id'=>$primary_key));
-		$this->db->update('assessment_milestones',$data);
-		
+	//Added by onduso
+	public function modify_status_on_view_form($value, $primary_key) {
+		$html = '';
+		$value == 1 ? $html = '<div>Active</div>' : $html = '<div>Suspended</div>';
+		return $html;
+	}
+
+	function update_assessment_review_status($post_array, $primary_key) {
+
+		$data['assessment_review_status'] = $post_array['milestone_name'] . ' In Progress';
+
+		$this -> db -> where(array('assessment_milestones_id' => $primary_key));
+		$this -> db -> update('assessment_milestones', $data);
+
 		return true;
 	}
-	function create_a_range_assessment_period_in_days_field($value , $primary_key = null){
-		   return '<input class="form-control" name="assessment_period_in_days"  type="number" min = "1" max = "180" value="'.$value.'" style="width:462px">';
+
+	function create_a_range_assessment_period_in_days_field($value, $primary_key = null) {
+		return '<input class="form-control" name="assessment_period_in_days"  type="number" min = "1" max = "180" value="' . $value . '" style="width:462px">';
 	}
-	
-	function update_insert_after_milestone($post_array,$primary_key){
+
+	function update_insert_after_milestone($post_array, $primary_key) {
 		$data['insert_after_milestone_id'] = $primary_key;
 		$data['insert_after_milestone_name'] = $post_array['milestone_name'];
-		
-		$this->db->insert('insert_after_milestone',$data);
-		
+
+		$this -> db -> insert('insert_after_milestone', $data);
+
 		return true;
 	}
 
@@ -258,16 +285,15 @@ class Settings extends CI_Controller {
 		$crud = new grocery_CRUD();
 		$crud -> set_theme('tablestrap');
 		$crud -> set_table('compassion_connect_mapping');
-		
-		//Where condition
-		$crud->where(array('lead_score_parameter<>'=>'No Match'));
-		
-		//Dropdowns
-		$crud->set_relation('lead_score_stage', 'connect_stage', 'connect_stage_name');
-		
-		//Unset delete and Edit
-		$crud->unset_delete();
 
+		//Where condition
+		$crud -> where(array('lead_score_parameter<>' => 'No Match'));
+
+		//Dropdowns
+		$crud -> set_relation('lead_score_stage', 'connect_stage', 'connect_stage_name');
+
+		//Unset delete and Edit
+		$crud -> unset_delete();
 
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
@@ -285,17 +311,17 @@ class Settings extends CI_Controller {
 		$crud = new grocery_CRUD();
 		$crud -> set_theme('tablestrap');
 		$crud -> set_table('assessment_progress_measure');
-		
-		//Defined range of weights 
-		$crud->field_type('weight', 'dropdown',range(0,10));
-		$crud->field_type('status', 'dropdown',array(get_phrase('suspended'),get_phrase('active')));
-		
+
+		//Defined range of weights
+		$crud -> field_type('weight', 'dropdown', range(0, 10));
+		$crud -> field_type('status', 'dropdown', array(get_phrase('suspended'), get_phrase('active')));
+
 		//Set relationship to CC mapping
-		$crud->set_relation('compassion_connect_mapping', 'compassion_connect_mapping', 'lead_score_parameter');		
-		
+		$crud -> set_relation('compassion_connect_mapping', 'compassion_connect_mapping', 'lead_score_parameter');
+
 		//Prevented actions
-		$crud->unset_delete();
-		
+		$crud -> unset_delete();
+
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
 		$page_data['view_type'] = 'settings';
@@ -303,7 +329,7 @@ class Settings extends CI_Controller {
 		$output = array_merge($page_data, (array)$output);
 
 		$this -> load -> view('backend/index', $output);
-		
+
 	}
 
 }
