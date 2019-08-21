@@ -216,13 +216,14 @@ class Settings extends CI_Controller {
 		$crud -> unset_add_fields(array('assessment_review_status'));
 
 		//Avoid selection of "New Lead" Milestone
-		$crud -> where(array('milestone_name<>' => 'New Lead'));
+		//$crud -> where('milestone_name!=' , 'New Lead');
 
 		//Order By - Not working
-		$crud -> order_by('assessment_milestones_id');
+		//$crud -> order_by('assessment_milestones_id');
 
 		//Relation tables
-		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name');
+		//Onduso added a where clause so that New Lead is not displayed in the dropdown list
+		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name',array('insert_after_milestone_name<>' => 'New Lead'));
 
 		//Display in human readable
 		$crud -> display_as('milestones_insert_after_id', get_phrase('insert_after')) -> display_as('user_customized_review_status', get_phrase('customized_review_status'));
