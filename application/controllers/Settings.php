@@ -212,9 +212,16 @@ class Settings extends CI_Controller {
 		$crud -> field_type('status', 'dropdown', array(get_phrase('suspended'), get_phrase('active')));
 
 		//Unset Field Add /Edit
-		$crud -> unset_edit_fields(array('assessment_review_status'));
-		$crud -> unset_add_fields(array('assessment_review_status'));
+		//$crud -> unset_edit_fields(array('assessment_review_status'));
+		//$crud -> unset_add_fields(array('assessment_review_status'));
+		$crud -> unset_add_fields(array('status'));
+		//$crud -> unset_add_fields(array('assessment_review_status'));
+		//$crud -> field_type('assessment_review_status','hidden');
 
+		$crud -> fields('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days', 'user_customized_review_status', 'assessment_review_status');
+
+		$crud -> field_type('assessment_review_status', 'invisible');
+		$crud -> edit_fields('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days', 'user_customized_review_status', 'status');
 		//Avoid selection of "New Lead" Milestone
 		//$crud -> where('milestone_name!=' , 'New Lead');
 
@@ -223,7 +230,7 @@ class Settings extends CI_Controller {
 
 		//Relation tables
 		//Onduso added a where clause so that New Lead is not displayed in the dropdown list
-		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name',array('insert_after_milestone_name<>' => 'New Lead'));
+		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name', array('insert_after_milestone_name<>' => 'New Lead'));
 
 		//Display in human readable
 		$crud -> display_as('milestones_insert_after_id', get_phrase('insert_after')) -> display_as('user_customized_review_status', get_phrase('customized_review_status'));
@@ -234,8 +241,13 @@ class Settings extends CI_Controller {
 		//Callbacks
 		$crud -> callback_after_insert(array($this, 'update_insert_after_milestone'));
 		$crud -> callback_field('assessment_period_in_days', array($this, 'create_a_range_assessment_period_in_days_field'));
-		$crud -> callback_after_insert(array($this, 'update_assessment_review_status'));
+		//$crud -> callback_after_insert(array($this, 'update_assessment_review_status'));
 		$crud -> callback_read_field('status', array($this, 'modify_status_on_view_form'));
+		$crud -> callback_after_insert(array($this, 'update_assessment_milestone_status_to_active'));
+		$crud->callback_before_insert(array($this,'add_hidden_assessment_review_status'));
+		
+		
+		//$crud-> hide_staus_field
 
 		//Callbacks to be run by developers
 		// $crud->callback_after_update();
@@ -256,15 +268,38 @@ class Settings extends CI_Controller {
 		return $html;
 	}
 
-	function update_assessment_review_status($post_array, $primary_key) {
+	function update_assessment_milestone_status_to_active($primary_key) {
 
-		$data['assessment_review_status'] = $post_array['milestone_name'] . ' In Progress';
+		$data['status'] = 1;
 
 		$this -> db -> where(array('assessment_milestones_id' => $primary_key));
-		$this -> db -> update('assessment_milestones', $data);
+		$this -> db -> update('status', $data);
 
 		return true;
 	}
+
+	function add_hidden_assessment_review_status($post_array) {
+
+		$post_array['assessment_review_status'] = $post_array['milestone_name'] . ' In Progress';
+		
+		return $post_array;
+	}
+
+	//End of Onduso added crude form code
+	
+	
+	
+
+	// function update_assessment_review_status($post_array, $primary_key) {
+// 
+		// $data['assessment_review_status'] = $post_array['milestone_name'] . ' In Progress';
+// 
+		// $this -> db -> where(array('assessment_milestones_id' => $primary_key));
+		// $this -> db -> update('assessment_milestones', $data);
+// 
+		// return true;
+	// }
+
 
 	function create_a_range_assessment_period_in_days_field($value, $primary_key = null) {
 		return '<input class="form-control" name="assessment_period_in_days"  type="number" min = "1" max = "180" value="' . $value . '" style="width:462px">';
@@ -288,13 +323,14 @@ class Settings extends CI_Controller {
 		$crud -> set_table('compassion_connect_mapping');
 
 		//Where condition
-		$crud -> where(array('lead_score_parameter<>' => 'No Match'));
+		//$crud -> where(array('lead_score_parameter<>' => 'No Match'));
 
 		//Dropdowns
 		$crud -> set_relation('lead_score_stage', 'connect_stage', 'connect_stage_name');
 
 		//Unset delete and Edit
 		$crud -> unset_delete();
+		$crud -> unset_clone();
 
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
@@ -319,7 +355,7 @@ class Settings extends CI_Controller {
 
 		//Set relationship to CC mapping
 		$crud -> set_relation('compassion_connect_mapping', 'compassion_connect_mapping', 'lead_score_parameter');
-		
+
 		//Callback function added by Onduso
 		$crud -> callback_read_field('status', array($this, 'modify_status_on_view_form'));
 
