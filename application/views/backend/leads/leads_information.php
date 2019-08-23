@@ -11,7 +11,8 @@ foreach($css_files as $file): ?>
 <hr />
 <div class="row">
 	<div class="col-sm-12">
-		<?php echo $output; ?>
+		
+		<?php echo $output;?>
 	</div>
 </div>
  

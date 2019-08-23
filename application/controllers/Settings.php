@@ -221,6 +221,7 @@ class Settings extends CI_Controller {
 		$crud -> fields('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days', 'user_customized_review_status', 'assessment_review_status');
 
 		$crud -> field_type('assessment_review_status', 'invisible');
+		
 		$crud -> edit_fields('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days', 'user_customized_review_status', 'status');
 		//Avoid selection of "New Lead" Milestone
 		//$crud -> where('milestone_name!=' , 'New Lead');
