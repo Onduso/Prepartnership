@@ -155,6 +155,7 @@ class Leads extends CI_Controller {
 		//Unset delete and Edit
 		$crud -> unset_delete();
 		$crud -> unset_add();
+		
 		//On some admin roll to be able to edit and reopen the closed assessment
 		if ($this -> session -> userdata('role_id') != 1) {
 			$crud -> unset_edit();
