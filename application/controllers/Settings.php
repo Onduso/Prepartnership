@@ -223,6 +223,9 @@ class Settings extends CI_Controller {
 		//Unset actions
 		$crud -> unset_clone();
 		$crud -> unset_delete();
+		$crud->order_by('milestones_insert_after_id');
+		
+		$crud->where(array('assessment_milestones_id<>'=>1));
 
 		//Dropdown fields conversion
 		$crud -> field_type('status', 'dropdown', array(get_phrase('suspended'), get_phrase('active')));
@@ -247,8 +250,9 @@ class Settings extends CI_Controller {
 
 		//Relation tables
 		//Onduso added a where clause so that New Lead is not displayed in the dropdown list
-		$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name', array('insert_after_milestone_name<>' => 'New Lead'));
-
+		//$crud -> set_relation('milestones_insert_after_id', 'insert_after_milestone', 'insert_after_milestone_name', array('insert_after_milestone_name<>' => 'None'));
+        
+        $crud->field_type('milestones_insert_after_id', 'dropdown',$this->get_assessment_milestones($crud));
 		//Display in human readable
 		$crud -> display_as('milestones_insert_after_id', get_phrase('insert_after')) -> display_as('user_customized_review_status', get_phrase('customized_review_status'));
 
@@ -256,12 +260,14 @@ class Settings extends CI_Controller {
 		$crud -> required_fields(array('milestone_name', 'milestones_insert_after_id', 'assessment_period_in_days'));
 
 		//Callbacks
-		$crud -> callback_after_insert(array($this, 'update_insert_after_milestone'));
+		
 		$crud -> callback_field('assessment_period_in_days', array($this, 'create_a_range_assessment_period_in_days_field'));
 		//$crud -> callback_after_insert(array($this, 'update_assessment_review_status'));
 		$crud -> callback_read_field('status', array($this, 'modify_status_on_view_form'));
-		$crud -> callback_after_insert(array($this, 'update_assessment_milestone_status_to_active'));
+		//$crud -> callback_after_insert(array($this, 'update_assessment_milestone_status_to_active'));
+		$crud -> callback_after_insert(array($this, 'update_insert_after_milestone'));
 		$crud->callback_before_insert(array($this,'add_hidden_assessment_review_status'));
+		//$crud->callback_after_insert(array($this,'update_insert_after_on_milestone_creation'));
 		
 		
 		//$crud-> hide_staus_field
@@ -284,22 +290,66 @@ class Settings extends CI_Controller {
 		$value == 1 ? $html = '<div>Active</div>' : $html = '<div>Suspended</div>';
 		return $html;
 	}
+    private function get_assessment_milestones($crud){
+    	
+		$state=$crud->getState();
+		
+		$this->db->select(array('assessment_milestones_id','milestone_name'));
+		
+		if($state=='add' || $state=='edit'){
+			$this->db->where(array('assessment_milestones_id<>'=>1,'status'=>1));
+		}
+		$milestones=$this->db->get('assessment_milestones');
+		
+		
+		if($milestones->num_rows()>0){
+			
+			//$milestones_return_array = array('None');
+				
+			$array_of_ids=array_column($milestones->result_array(), 'assessment_milestones_id');
+			
+			array_push($array_of_ids,0);
+			
+			$array_of_milestone_names=array_column($milestones->result_array(), 'milestone_name');
+			
+			array_push($array_of_milestone_names,'');
+			
+			return array_combine($array_of_ids,$array_of_milestone_names);
+			
+		}
+		else{
+			return array();
+		}
+		
+		
+    }
 
-	function update_assessment_milestone_status_to_active($primary_key) {
-
-		$data['status'] = 1;
-
-		$this -> db -> where(array('assessment_milestones_id' => $primary_key));
-		$this -> db -> update('status', $data);
-
-		return true;
-	}
+	// function update_assessment_milestone_status_to_active($primary_key) {
+// 
+		// $data['status'] = 1;
+// 
+		// $this -> db -> where(array('assessment_milestones_id' => $primary_key));
+		// $this -> db -> update('status', $data);
+// 
+		// return true;
+	// }
 
 	function add_hidden_assessment_review_status($post_array) {
 
 		$post_array['assessment_review_status'] = $post_array['milestone_name'] . ' In Progress';
 		
 		return $post_array;
+	}
+	
+	function update_insert_after_on_milestone_creation($post_array,$primary_key){
+		
+		$new_milestone_insert_after=$post_array['milestones_insert_after_id'];
+		
+		$this->db->where(array('assessment_milestones_id<>'=>$primary_key,'milestones_insert_after_id'=>$post_array['milestones_insert_after_id']));
+		
+		$this->db->update('assessment_milestones',array('milestones_insert_after_id'=>$primary_key));
+		
+		return true;
 	}
 
 	//End of Onduso added crude form code
@@ -323,11 +373,13 @@ class Settings extends CI_Controller {
 	}
 
 	function update_insert_after_milestone($post_array, $primary_key) {
-		$data['insert_after_milestone_id'] = $primary_key;
-		$data['insert_after_milestone_name'] = $post_array['milestone_name'];
+				
+		$new_milestone_insert_after=$post_array['milestones_insert_after_id'];
+ 		
+		$this->db->where(array('assessment_milestones_id<>'=>$primary_key,'milestones_insert_after_id'=>$post_array['milestones_insert_after_id']));
 
-		$this -> db -> insert('insert_after_milestone', $data);
-
+		$this->db->update('assessment_milestones',array('milestones_insert_after_id'=>$primary_key));
+		
 		return true;
 	}
 
