@@ -77,6 +77,8 @@ class Settings extends CI_Controller {
 		$crud -> callback_read_field('is_field_unique', array($this, 'modify_value_to_view'));
 		$crud -> callback_read_field('is_field_unique', array($this, 'modify_value_to_view'));
 		$crud -> callback_read_field('default_value', array($this, 'modify_value_to_view'));
+		
+		$crud->callback_before_insert(array($this,'update_show_fieds_to_yes_on_required_fields'));
 
 		$output = $crud -> render();
 		$page_data['page_name'] = 'assessment_settings';
@@ -88,6 +90,20 @@ class Settings extends CI_Controller {
 	}
 
 	//Onduso added this method
+	function update_show_fieds_to_yes_on_required_fields($post_array) {
+	
+       $show_field=$post_array['show_field'];
+	   $required_field=$post_array['is_field_null'];
+	   
+	   if($show_field==0 && $required_field==1){
+	   	
+		$post_array['show_field']=1;		 
+		   
+	  }
+		return $post_array;
+	}
+	
+
 	public function modify_value_to_view($value, $primary_key) {
 		//Display Yes or No when viewing and not one
 		$value == 1 ? $modfy_html = '<div>Yes</div>' : $modfy_html = '<div>No</div>';

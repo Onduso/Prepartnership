@@ -199,6 +199,8 @@ class Leads extends CI_Controller {
 
 			$crud -> edit_fields($columns);
 		}
+		
+		
 
 		$output = $crud -> render();
 		$page_data['page_name'] = 'leads_information';
@@ -208,6 +210,8 @@ class Leads extends CI_Controller {
 
 		$this -> load -> view('backend/index', $output);
 	}
+
+
 
 	function lead_assessment($lead_id = '') {
 		if ($this -> session -> userdata('user_login') != 1)
