@@ -35,6 +35,8 @@ class Leads extends CI_Controller {
 		$crud -> set_table('leads_bio_information');
 
 		$status = 'Active';
+		
+		$crud->where(array('lead_status'=>'Active'));
 
 		//Required Fields
 		$required_array = array('lead_status');
