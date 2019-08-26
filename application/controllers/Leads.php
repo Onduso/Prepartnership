@@ -60,7 +60,17 @@ class Leads extends CI_Controller {
 		$crud -> field_type('lead_status', 'dropdown', array('Active' => 'Active', 'Closed' => 'Closed'));
 
 		//Get field to display on the bio form
-		$fields_to_display_on_bio_form = $this -> db -> get_where('lead_bio_fields', array('show_field' => 1));
+		$fields_to_hide_on_list = $this -> db -> get_where('lead_bio_fields', array('show_field' => 0));
+		
+		if ($fields_to_hide_on_list -> num_rows() > 0) {
+
+			$columns = array_column($fields_to_hide_on_list -> result_array(), 'lead_bio_info_column');
+
+			$crud -> unset_columns($columns);
+
+		}
+		
+		$fields_to_display_on_bio_form = $this -> db -> get_where('lead_bio_fields', array('is_suspended' => 0));
 
 		if ($fields_to_display_on_bio_form -> num_rows() > 0) {
 
@@ -163,6 +173,31 @@ class Leads extends CI_Controller {
 		//On some admin roll to be able to edit and reopen the closed assessment
 		if ($this -> session -> userdata('role_id') != 1) {
 			$crud -> unset_edit();
+		}
+		
+		//Get field to display on the bio form
+		$fields_to_hide_on_list = $this -> db -> get_where('lead_bio_fields', array('show_field' => 0));
+		
+		if ($fields_to_hide_on_list -> num_rows() > 0) {
+
+			$columns = array_column($fields_to_hide_on_list -> result_array(), 'lead_bio_info_column');
+
+			$crud -> unset_columns($columns);
+
+		}
+		
+		$fields_to_display_on_bio_form = $this -> db -> get_where('lead_bio_fields', array('is_suspended' => 0));
+
+		if ($fields_to_display_on_bio_form -> num_rows() > 0) {
+
+			$columns = array_column($fields_to_display_on_bio_form -> result_array(), 'lead_bio_info_column');
+
+			$crud -> add_fields($columns);
+
+			//Add the 'lead_status_field on EDIT form
+			array_push($columns, 'lead_status');
+
+			$crud -> edit_fields($columns);
 		}
 
 		$output = $crud -> render();
