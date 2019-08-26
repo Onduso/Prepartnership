@@ -40,6 +40,8 @@ class Leads extends CI_Controller {
 		$required_array = array('lead_status');
 
 		$crud -> unset_add_fields('lead_status');
+		
+		$crud->unset_clone();
 
 		$required_fields = $this -> db -> get_where('lead_bio_fields', array('is_field_null' => 0));
 
